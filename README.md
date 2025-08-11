@@ -7,7 +7,8 @@ Ideal para **pentests**, **provas de conceito (PoCs)** e **demonstração de vul
 
 ## 🖼️ Demonstração da Interface
 
-<img width="1917" height="1032" alt="image" src="https://github.com/user-attachments/assets/ea542a9f-84ae-4926-88bc-510f5ffce268" />
+<img width="1920" height="1032" alt="image" src="https://github.com/user-attachments/assets/0d1f280a-8523-4f0b-8d44-061816e659f8" />
+
 
 ---
 
@@ -37,7 +38,7 @@ Antes de usar, é necessário ter instalado:
 1. **Clonar este repositório**:
 
 ```bash
-git clone https://github.com/seu-usuario/interactsh-viewer.git
+git clone https://github.com/k19x/interactsh-viewer.git
 cd interactsh-viewer
 ```
 2. **Executar o interactsh-client via Docker:
