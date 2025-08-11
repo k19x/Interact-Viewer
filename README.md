@@ -39,3 +39,19 @@ Antes de usar, é necessário ter instalado:
 ```bash
 git clone https://github.com/seu-usuario/interactsh-viewer.git
 cd interactsh-viewer
+```
+2. **Executar o interactsh-client via Docker:
+```bash
+docker run -it --rm \
+  -p 8080:8080 \
+  projectdiscovery/interactsh-client:latest \
+  --server https://oast.pro --dns-port 53 --http-port 80
+```
+```bash
+├── index.html       # Interface principal
+├── main.js          # Lógica de interação e SSE
+├── style.css        # Estilização (CSS)
+├── docs/
+│   └── screenshot.png
+└── README.md
+```
