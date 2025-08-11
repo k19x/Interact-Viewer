@@ -1,0 +1,320 @@
+<!doctype html>
+<html lang="pt-br">
+
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Interactsh Viewer</title>
+  <style>
+    :root {
+      --bg: #0b0e14;
+      --panel: #111726;
+      --panel-2: #0f1320;
+      --text: #e5e7eb;
+      --muted: #9ca3af;
+      --border: #1f2937;
+      --http: #2563eb;
+      --dns: #a855f7;
+      --good: #10b981;
+      --bad: #ef4444;
+      --accent: #f59e0b;
+    }
+
+    * {
+      box-sizing: border-box
+    }
+
+    body {
+      font-family: system-ui, -apple-system, Segoe UI, Roboto, Arial;
+      margin: 0;
+      background: var(--bg);
+      color: var(--text)
+    }
+
+    header {
+      padding: 16px 20px;
+      background: var(--panel);
+      border-bottom: 1px solid var(--border);
+      position: sticky;
+      top: 0;
+      z-index: 10
+    }
+
+    .topbar {
+      display: flex;
+      gap: 12px;
+      align-items: center;
+      justify-content: space-between
+    }
+
+    .title {
+      display: flex;
+      flex-direction: column;
+      gap: 6px
+    }
+
+    h1 {
+      font-size: 20px;
+      margin: 0
+    }
+
+    .subtitle {
+      font-size: 12px;
+      color: var(--muted)
+    }
+
+    .controls {
+      display: flex;
+      gap: 8px;
+      align-items: center
+    }
+
+    button {
+      background: var(--panel-2);
+      color: var(--text);
+      border: 1px solid var(--border);
+      padding: 8px 12px;
+      border-radius: 10px;
+      cursor: pointer
+    }
+
+    button:disabled {
+      opacity: .6;
+      cursor: not-allowed
+    }
+
+    .status {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      font-size: 13px;
+      color: var(--muted)
+    }
+
+    .dot {
+      width: 10px;
+      height: 10px;
+      border-radius: 50%
+    }
+
+    .dot.good {
+      background: var(--good)
+    }
+
+    .dot.bad {
+      background: var(--bad)
+    }
+
+    .wrap {
+      padding: 16px 20px
+    }
+
+    .payload-box {
+      background: var(--panel);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 10px 12px;
+      margin-bottom: 12px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      flex-wrap: wrap
+    }
+
+    .payload-label {
+      font-size: 12px;
+      color: var(--muted)
+    }
+
+    .payload {
+      font-weight: 700;
+      color: var(--accent);
+      word-break: break-all
+    }
+
+    .log {
+      display: none;
+      background: var(--panel-2);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      padding: 8px;
+      height: 160px;
+      overflow: auto;
+      font-family: ui-monospace, Menlo, Consolas, monospace;
+      font-size: 12px;
+      white-space: pre-wrap;
+      margin-top: 8px
+    }
+
+    .filters {
+      display: flex;
+      gap: 8px;
+      margin: 8px 0 16px;
+      align-items: center
+    }
+
+    .chip {
+      border: 1px solid var(--border);
+      padding: 6px 10px;
+      border-radius: 999px;
+      font-size: 12px;
+      cursor: pointer;
+      user-select: none
+    }
+
+    .chip.on {
+      outline: 2px solid var(--border)
+    }
+
+    table {
+      width: 100%;
+      border-collapse: separate;
+      /* horiz = 14px, vert = 12px (ajuste a gosto) */
+      border-spacing: 14px 12px;
+      table-layout: fixed;
+      /* evita “aperto” quando o texto é longo */
+    }
+
+    th {
+      font-size: 12px;
+      color: var(--muted);
+      text-align: left;
+      padding: 0 6px 2px;
+      /* um espacinho abaixo do header */
+    }
+
+    td {
+      padding: 0;
+      /* o espaço fica por conta do border-spacing e do .card */
+    }
+
+    .card {
+      background: var(--panel);
+      border: 1px solid var(--border);
+      border-radius: 14px;
+      padding: 12px 14px;
+      /* um pouco mais de respiro interno */
+    }
+
+    .rowline {
+      display: grid;
+      grid-template-columns: 150px 170px 1fr 90px 1fr;
+      gap: 12px
+    }
+
+    .badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      font-size: 12px;
+      border-radius: 999px;
+      padding: 2px 8px;
+      border: 1px solid var(--border)
+    }
+
+    .badge.http {
+      color: var(--http)
+    }
+
+    .badge.dns {
+      color: var(--dns)
+    }
+
+    .small {
+      color: var(--muted);
+      font-size: 12px
+    }
+
+    .mono {
+      font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, "Liberation Mono", monospace;
+      white-space: pre-wrap;
+      word-break: break-word
+    }
+
+    details {
+      background: var(--panel-2);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      padding: 8px
+    }
+
+    details[open] {
+      outline: 1px solid var(--border)
+    }
+
+    summary {
+      cursor: pointer;
+      color: var(--muted);
+      margin-bottom: 6px
+    }
+
+    .kv {
+      display: grid;
+      grid-template-columns: max-content 1fr;
+      gap: 6px
+    }
+
+    .kv b {
+      color: #cbd5e1
+    }
+
+    @media (max-width:1100px) {
+      .rowline {
+        grid-template-columns: 120px 1fr;
+        grid-auto-rows: auto
+      }
+    }
+  </style>
+</head>
+
+<body>
+  <header>
+    <div class="topbar">
+      <div class="title">
+        <h1>📡 Interactsh Viewer</h1>
+        <div class="subtitle">Atualiza em tempo real via SSE. Você pode iniciar o <b>interactsh-client</b> pelo botão
+          abaixo.</div>
+      </div>
+      <div class="controls">
+        <span class="status" id="statusTxt"><span class="dot bad"></span>Parado</span>
+        <button id="startBtn">Iniciar</button>
+        <button id="stopBtn" disabled>Parar</button>
+      </div>
+    </div>
+  </header>
+
+  <div class="wrap">
+    <div class="payload-box">
+      <div class="payload-label">Payload atual:</div>
+      <div class="payload" id="payloadTxt">—</div>
+      <button id="copyPayload" title="Copiar payload atual">Copiar</button>
+      <button id="toggleLog">Mostrar log do cliente</button>
+      <div class="small">Dica: copie o payload e use em PoCs HTTP/DNS</div>
+    </div>
+    <pre class="log" id="logBox"></pre>
+
+    <div class="filters">
+      <button id="clearBtn">Limpar</button>
+      <div class="chip on" data-filter="ALL">Tudo</div>
+      <div class="chip" data-filter="HTTP">HTTP</div>
+      <div class="chip" data-filter="DNS">DNS</div>
+    </div>
+
+    <table>
+      <thead>
+        <tr>
+          <th>Quando</th>
+          <th>Origem</th>
+          <th>Host / Query</th>
+          <th>Protocolo</th>
+          <th>Detalhes</th>
+        </tr>
+      </thead>
+      <tbody id="tbody"></tbody>
+    </table>
+  </div>
+
+  <script src="/main.js"></script>
+</body>
+
+</html>

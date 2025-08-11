@@ -1,0 +1,520 @@
+<!doctype html>
+<html lang="pt-br">
+
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Interactsh Viewer</title>
+  <style>
+    :root {
+      --bg: #0b0e14;
+      --panel: #111726;
+      --panel-2: #0f1320;
+      --text: #e5e7eb;
+      --muted: #9ca3af;
+      --border: #1f2937;
+      --http: #2563eb;
+      --dns: #a855f7;
+      --good: #10b981;
+      --bad: #ef4444;
+      --accent: #f59e0b;
+    }
+
+    * {
+      box-sizing: border-box
+    }
+
+    body {
+      font-family: system-ui, -apple-system, Segoe UI, Roboto, Arial;
+      margin: 0;
+      background: var(--bg);
+      color: var(--text)
+    }
+
+    header {
+      padding: 16px 20px;
+      background: var(--panel);
+      border-bottom: 1px solid var(--border);
+      position: sticky;
+      top: 0;
+      z-index: 10
+    }
+
+    .topbar {
+      display: flex;
+      gap: 12px;
+      align-items: center;
+      justify-content: space-between
+    }
+
+    .title {
+      display: flex;
+      flex-direction: column;
+      gap: 6px
+    }
+
+    h1 {
+      font-size: 20px;
+      margin: 0
+    }
+
+    .subtitle {
+      font-size: 12px;
+      color: var(--muted)
+    }
+
+    .controls {
+      display: flex;
+      gap: 8px;
+      align-items: center;
+      flex-wrap: wrap
+    }
+
+    button {
+      background: var(--panel-2);
+      color: var(--text);
+      border: 1px solid var(--border);
+      padding: 8px 12px;
+      border-radius: 10px;
+      cursor: pointer
+    }
+
+    button:disabled {
+      opacity: .6;
+      cursor: not-allowed
+    }
+
+    .status {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      font-size: 13px;
+      color: var(--muted)
+    }
+
+    .dot {
+      width: 10px;
+      height: 10px;
+      border-radius: 50%
+    }
+
+    .dot.good {
+      background: var(--good)
+    }
+
+    .dot.bad {
+      background: var(--bad)
+    }
+
+    .wrap {
+      padding: 16px 20px
+    }
+
+    .payload-box {
+      background: var(--panel);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 10px 12px;
+      margin-bottom: 12px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      flex-wrap: wrap
+    }
+
+    .payload-label {
+      font-size: 12px;
+      color: var(--muted)
+    }
+
+    .payload {
+      font-weight: 700;
+      color: var(--accent);
+      word-break: break-all
+    }
+
+    .log {
+      display: none;
+      background: var(--panel-2);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      padding: 8px;
+      height: 160px;
+      overflow: auto;
+      font-family: ui-monospace, Menlo, Consolas, monospace;
+      font-size: 12px;
+      white-space: pre-wrap;
+      margin-top: 8px
+    }
+
+    .filters {
+      display: flex;
+      gap: 8px;
+      margin: 8px 0 16px;
+      align-items: center;
+      flex-wrap: wrap
+    }
+
+    .chip {
+      border: 1px solid var(--border);
+      padding: 6px 10px;
+      border-radius: 999px;
+      font-size: 12px;
+      cursor: pointer;
+      user-select: none
+    }
+
+    .chip.on {
+      outline: 2px solid var(--border)
+    }
+
+    .table-wrap {
+      width: 100%;
+      overflow-x: auto
+    }
+
+    table {
+      width: 100%;
+      border-collapse: separate;
+      border-spacing: 14px 12px;
+      table-layout: fixed
+    }
+
+    th {
+      font-size: 12px;
+      color: var(--muted);
+      text-align: left;
+      padding: 0 6px 2px
+    }
+
+    td {
+      padding: 0
+    }
+
+    .card {
+      background: var(--panel);
+      border: 1px solid var(--border);
+      border-radius: 14px;
+      padding: 12px 14px
+    }
+
+    .card:hover {
+      background: var(--panel-2);
+      transition: background .2s ease-in-out
+    }
+
+    .badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      font-size: 12px;
+      border-radius: 999px;
+      padding: 2px 8px;
+      border: 1px solid var(--border)
+    }
+
+    .badge.http {
+      color: var(--http)
+    }
+
+    .badge.dns {
+      color: var(--dns)
+    }
+
+    .small {
+      color: var(--muted);
+      font-size: 12px
+    }
+
+    .mono {
+      font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, "Liberation Mono", monospace;
+      white-space: pre-wrap;
+      word-break: break-word
+    }
+
+    details {
+      background: var(--panel-2);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      padding: 8px
+    }
+
+    details[open] {
+      outline: 1px solid var(--border)
+    }
+
+    summary {
+      cursor: pointer;
+      color: var(--muted);
+      margin-bottom: 6px
+    }
+
+    .kv {
+      display: grid;
+      grid-template-columns: max-content 1fr;
+      gap: 6px
+    }
+
+    .kv b {
+      color: #cbd5e1
+    }
+
+    /* larguras fixas em telas grandes */
+    table {
+      table-layout: fixed
+    }
+
+    /* Quando */
+    table thead th:nth-child(1),
+    #tbody td:nth-child(1) {
+      width: 140px;
+      white-space: nowrap;
+    }
+
+    /* Origem */
+    table thead th:nth-child(2),
+    #tbody td:nth-child(2) {
+      width: 180px;
+      /* largura fixa */
+      white-space: nowrap;
+      /* tudo na mesma linha */
+      overflow-x: auto;
+      /* rolagem horizontal */
+      text-overflow: unset;
+      /* não corta texto */
+    }
+
+/* Host / Query */
+table thead th:nth-child(3),
+#tbody td:nth-child(3) {
+  width: auto;
+  min-width: fit-content;
+  white-space: nowrap;
+}
+
+#tbody td:nth-child(3) .card {
+  display: inline-block;
+  white-space: nowrap;
+  overflow: visible;
+}
+
+
+    /* Para mostrar barra de rolagem dentro do card */
+    #tbody td:nth-child(2) .card,
+    #tbody td:nth-child(3) .card {
+      overflow-x: auto;
+    }
+
+
+    /* Protocolo */
+    table thead th:nth-child(4),
+    #tbody td:nth-child(4) {
+      width: 100px;
+    }
+
+    #tbody td:nth-child(4) .card {
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      padding: 8px 10px;
+    }
+
+    #tbody td:nth-child(2) .mono,
+    #tbody td:nth-child(3) .mono {
+      white-space: nowrap;
+      overflow-x: auto;
+      display: block;
+    }
+
+    #tbody td:nth-child(2) .card,
+#tbody td:nth-child(3) .card {
+  overflow-x: auto;
+  white-space: nowrap;
+}
+
+    @media (max-width:900px) {
+      header {
+        padding: 14px 14px
+      }
+
+      .wrap {
+        padding: 14px
+      }
+
+      .controls {
+        gap: 6px
+      }
+
+      .controls button {
+        padding: 10px 12px
+      }
+
+      .payload-box {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 6px
+      }
+
+      .log {
+        height: 200px
+      }
+
+      table {
+        border-spacing: 10px 10px
+      }
+    }
+
+    @media (max-width:720px) {
+      thead {
+        display: none
+      }
+
+      table,
+      tbody,
+      tr,
+      td {
+        display: block;
+        width: 100%
+      }
+
+      tbody tr {
+        margin-bottom: 12px
+      }
+
+      td {
+        margin: 6px 0
+      }
+
+      .card {
+        padding: 10px 12px
+      }
+
+      #tbody td .card {
+        position: relative;
+        padding-top: 24px
+      }
+
+      #tbody td .card::before {
+        position: absolute;
+        left: 12px;
+        top: 6px;
+        font-size: 11px;
+        color: var(--muted);
+        letter-spacing: .2px
+      }
+
+      #tbody td:nth-child(1) .card::before {
+        content: "Quando"
+      }
+
+      #tbody td:nth-child(2) .card::before {
+        content: "Origem"
+      }
+
+      #tbody td:nth-child(3) .card::before {
+        content: "Host / Query"
+      }
+
+      #tbody td:nth-child(4) .card::before {
+        content: "Protocolo"
+      }
+
+      #tbody td:nth-child(5) .card::before {
+        content: "Detalhes"
+      }
+
+      #tbody td:nth-child(4) .card {
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        padding-top: 32px
+      }
+
+      details {
+        padding: 6px
+      }
+    }
+
+    @media (max-width:380px) {
+      h1 {
+        font-size: 18px
+      }
+
+      .subtitle {
+        font-size: 11px
+      }
+
+      .chip {
+        padding: 5px 9px
+      }
+
+      .badge {
+        font-size: 11px
+      }
+
+      .payload-box {
+        padding: 8px 10px
+      }
+
+      .card {
+        border-radius: 12px
+      }
+    }
+  </style>
+
+</head>
+
+<body>
+  <header>
+    <div class="topbar">
+      <div class="title">
+        <h1>📡 Interactsh Viewer</h1>
+        <div class="subtitle">Atualiza em tempo real via SSE. Você pode iniciar o <b>interactsh-client</b> pelo botão
+          abaixo.</div>
+      </div>
+      <div class="controls">
+        <span class="status" id="statusTxt"><span class="dot bad"></span>Parado</span>
+        <button id="startBtn" title="Inicia o container interactsh-client">Iniciar</button>
+        <button id="restartBtn" title="Reinicia (para e inicia novamente)">Reiniciar</button>
+        <button id="stopBtn" title="Para e remove o container" disabled>Parar</button>
+      </div>
+    </div>
+  </header>
+
+  <div class="wrap">
+    <div class="payload-box">
+      <div class="payload-label">Payload atual:</div>
+      <div class="payload" id="payloadTxt">—</div>
+      <button id="copyPayload" title="Copiar payload atual">Copiar</button>
+      <button id="toggleLog">Mostrar log do cliente</button>
+      <div class="small">Dica: copie o payload e use em PoCs HTTP/DNS</div>
+    </div>
+    <pre class="log" id="logBox"></pre>
+
+    <div class="filters">
+      <button id="clearBtn">Limpar</button>
+      <div class="chip on" data-filter="ALL">Tudo</div>
+      <div class="chip" data-filter="HTTP">HTTP</div>
+      <div class="chip" data-filter="DNS">DNS</div>
+    </div>
+
+    <div class="table-wrap">
+      <table>
+        <thead>
+          <tr>
+            <th>Quando</th>
+            <th>Origem</th>
+            <th>Host / Query</th>
+            <th>Protocolo</th>
+            <th>Detalhes</th>
+          </tr>
+        </thead>
+        <tbody id="tbody"></tbody>
+      </table>
+    </div>
+  </div>
+
+  <script src="/main.js"></script>
+</body>
+
+</html>

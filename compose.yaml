@@ -1,0 +1,9 @@
+# compose.yaml
+services:
+  client:
+    image: projectdiscovery/interactsh-client:latest
+    container_name: interactsh-client
+    command: ["-json","-v","-o","/data/interactions.ndjson"]
+    volumes:
+      - ./data:/data
+    restart: unless-stopped
