@@ -1,0 +1,2 @@
+:data/interactions.ndjson
+regex:(?s).+==>[REDACTED]
